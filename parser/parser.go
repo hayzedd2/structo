@@ -29,7 +29,7 @@ func ParseTypeOrInterface(input string) ([]types.Field, error) {
 	var fields []types.Field
 
 	fieldRegex := regexp.MustCompile(`(\w+)(\?)?:\s*((?:\[\])?\w+(?:\[\])?(?:<\w+>)?)`)
-	for _, fieldStr := range fieldStrings {
+	for i, fieldStr := range fieldStrings {
 		fieldStr = strings.TrimSpace(fieldStr)
 		if fieldStr == "" {
 			continue
@@ -47,12 +47,13 @@ func ParseTypeOrInterface(input string) ([]types.Field, error) {
 			return nil, fmt.Errorf("unsupported type %s", fieldType)
 		}
 		fields = append(fields, types.Field{
+			Index: i,
 			Name:       fieldName,
 			Type:       fieldType,
 			IsOptional: isOptional,
 		})
 	}
-
+	fmt.Println(fields)
 	if len(fields) == 0 {
 		return nil, fmt.Errorf("no valid fields found in interface or type")
 	}

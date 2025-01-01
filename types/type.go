@@ -8,6 +8,7 @@ type MockRequest struct {
 }
 
 type Field struct {
+	Index int
 	Name       string
 	Type       string
 	IsOptional bool

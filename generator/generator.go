@@ -2,25 +2,35 @@ package generator
 
 import (
 	"fmt"
-	"github.com/brianvoe/gofakeit/v7"
-	"github.com/structo/types"
 	"math/rand"
+	"sort"
 	"strings"
+
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/iancoleman/orderedmap"
+	"github.com/structo/types"
 )
 
 var faker = gofakeit.New(0)
 
-func GenerateMockObjects(fields []types.Field, count int) []map[string]interface{} {
+func GenerateMockObjects(fields []types.Field, count int) []orderedmap.OrderedMap {
 	// Create slice to hold multiple objects
-	mockObjects := make([]map[string]interface{}, count)
+	mockObjects := make([]orderedmap.OrderedMap, count)
 
 	// Generate 'count' number of objects
 	for i := 0; i < count; i++ {
-		mockDataMap := make(map[string]interface{})
-		for _, field := range fields {
-			mockDataMap[field.Name] = GenerateMockData(field)
+		mockDataMap := orderedmap.New()
+
+		// sort by index
+		sortedFields := make([]types.Field, len(fields))
+		copy(sortedFields,fields)
+		sort.Slice(sortedFields, func(i, j int) bool {
+            return sortedFields[i].Index < sortedFields[j].Index
+        })
+		for _, field := range sortedFields {
+			mockDataMap.Set(field.Name, GenerateMockData(field))
 		}
-		mockObjects[i] = mockDataMap
+		mockObjects[i] = *mockDataMap
 	}
 	return mockObjects
 }
@@ -89,6 +99,7 @@ func generateMeaningfulString(fieldName string) interface{} {
 		return faker.Username()
 	case contains(fieldName, "password"):
 		return faker.Password(true, true, true, true, false, 10)
+
 
 	// Identification
 	case contains(fieldName, "uuid", "id"):
@@ -180,7 +191,7 @@ func generateMeaningfulString(fieldName string) interface{} {
 	case contains(fieldName, "price"):
 		return fmt.Sprintf("%v", faker.Product().Price)
 	default:
-		return faker.LoremIpsumSentence(10)
+		return faker.LoremIpsumSentence(2)
 	}
 
 }
