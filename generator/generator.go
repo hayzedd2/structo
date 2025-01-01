@@ -2,13 +2,12 @@ package generator
 
 import (
 	"fmt"
-	"math/rand"
-	"sort"
-	"strings"
-
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/iancoleman/orderedmap"
 	"github.com/structo/types"
+	"math/rand"
+	"sort"
+	"strings"
 )
 
 var faker = gofakeit.New(0)
@@ -23,10 +22,10 @@ func GenerateMockObjects(fields []types.Field, count int) []orderedmap.OrderedMa
 
 		// sort by index
 		sortedFields := make([]types.Field, len(fields))
-		copy(sortedFields,fields)
+		copy(sortedFields, fields)
 		sort.Slice(sortedFields, func(i, j int) bool {
-            return sortedFields[i].Index < sortedFields[j].Index
-        })
+			return sortedFields[i].Index < sortedFields[j].Index
+		})
 		for _, field := range sortedFields {
 			mockDataMap.Set(field.Name, GenerateMockData(field))
 		}
@@ -36,41 +35,96 @@ func GenerateMockObjects(fields []types.Field, count int) []orderedmap.OrderedMa
 }
 
 func GenerateMockData(field types.Field) interface{} {
-	parts := strings.Split(strings.ToLower(field.Name), "_")
-	var fieldName = strings.Join(parts, "")
-	switch field.Type {
-	case "string":
-		return generateMeaningfulString(fieldName)
-	case "string[]":
-		count := rand.Intn(3) + 2
-		arr := make([]any, count)
-		for i := range arr {
-			arr[i] = (generateMeaningfulString(fieldName))
-		}
-		return arr
-	case "number":
-		return faker.Number(1, 1000)
-	case "number[]":
-		count := rand.Intn(3) + 2
-		arr := make([]int, count)
-		for i := range arr {
-			arr[i] = faker.Number(1, 1000)
-		}
-		return arr
-	case "bool", "boolean":
-		return faker.Bool()
-	case "Date":
-		return faker.Date()
-	case "[]Date":
-		count := rand.Intn(3) + 2
-		arr := make([]any, count)
-		for i := range arr {
-			arr[i] = faker.Date()
-		}
-		return arr
-	default:
-		return nil
-	}
+    parts := strings.Split(strings.ToLower(field.Name), "_")
+    fieldName := strings.Join(parts, "")
+    
+    // Extract base type and check if it's an array
+    baseType := field.Type
+    isArray := strings.HasSuffix(baseType, "[]") || strings.HasPrefix(baseType, "[]")
+    if isArray {
+        baseType = strings.TrimSuffix(strings.TrimPrefix(baseType, "[]"), "[]")
+    }
+	fmt.Println("basetype", baseType)
+
+    // Generate single value based on type
+    generateValue := func() interface{} {
+        switch baseType {
+        case "string":
+            return generateMeaningfulString(fieldName)
+            
+        case "number", "int", "int8", "int16", "int32", "int64", "Number":
+            return faker.Number(1, 1000)
+            
+        case "uint", "uint8", "uint16", "uint32", "uint64":
+            return faker.Uint64()
+            
+        case "float32", "Float32":
+            return faker.Float32()
+            
+        case "float64", "Float64":
+            return faker.Float64()
+            
+        case "bool", "boolean", "Boolean":
+            return faker.Bool()
+            
+        case "Date", "date":
+            return faker.Date()
+            
+        // TypeScript specific types
+        case "string | null", "String":
+            if faker.Bool() {
+                return nil
+            }
+            return generateMeaningfulString(fieldName)
+            
+        case "number | null", "Number | null":
+            if faker.Bool() {
+                return nil
+            }
+            return faker.Number(1, 1000)
+		case "boolean | null", "Boolean | null":
+			if faker.Bool() {
+                return nil
+            }
+            return faker.Bool()
+		case "Date | null":
+			if faker.Bool() {
+                return nil
+            }
+            return faker.Date()
+            
+        // Complex TypeScript types
+        // case "Record<string, string>":
+        //     count := rand.Intn(3) + 1
+        //     record := make(map[string]string)
+        //     for i := 0; i < count; i++ {
+        //         record[generateMeaningfulString("key")] = generateMeaningfulString("value")
+        //     }
+        //     return record
+            
+        // case "Record<string, number>":
+        //     count := rand.Intn(3) + 1
+        //     record := make(map[string]int)
+        //     for i := 0; i < count; i++ {
+        //         record[generateMeaningfulString("key")] = faker.Number(1, 1000)
+        //     }
+        //     return record
+            
+        default:
+            return nil
+        }
+    }
+
+    // Handle arrays
+    if isArray {
+        count := rand.Intn(3) + 2
+        arr := make([]interface{}, count)
+        for i := range arr {
+            arr[i] = generateValue()
+        }
+        return arr
+    }
+    return generateValue()
 }
 
 func contains(str string, patterns ...string) bool {
@@ -99,7 +153,8 @@ func generateMeaningfulString(fieldName string) interface{} {
 		return faker.Username()
 	case contains(fieldName, "password"):
 		return faker.Password(true, true, true, true, false, 10)
-
+	case contains(fieldName, "gender"):
+		return faker.Gender()
 
 	// Identification
 	case contains(fieldName, "uuid", "id"):

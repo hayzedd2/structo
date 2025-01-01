@@ -18,6 +18,10 @@ func HandleLangType(lang string) []string {
 	// Valid TypeScript types
 	validTypescriptTypes := []string{
 		"string",
+		"string | null",
+		"string | undefined",
+		"number | null",
+		"number | undefined",
 		"number",
 		"boolean",
 		"string[]",
@@ -69,5 +73,14 @@ func HandleLangType(lang string) []string {
 		return validGoTypes
 	default:
 		return nil // Unsupported language
+	}
+}
+
+func IsSupportedLanguage(lang string) bool {
+	switch strings.ToLower(lang) {
+	case "typescript", "golang", "go":
+		return true
+	default:
+		return false
 	}
 }

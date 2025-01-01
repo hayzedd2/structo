@@ -2,16 +2,13 @@ package parser
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
-
 	"github.com/structo/types"
 	"github.com/structo/utils"
+	"regexp"
+	"strings"
 )
 
-
-
-func ParseTypeOrInterface(input string) ([]types.Field, error) {
+func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 	// Clean up input - normalize whitespace while preserving necessary spaces
 	input = strings.TrimSpace(input)
 	input = regexp.MustCompile(`\s+`).ReplaceAllString(input, " ")
@@ -41,13 +38,17 @@ func ParseTypeOrInterface(input string) ([]types.Field, error) {
 		fieldName := matches[1]
 		isOptional := matches[2] == "?"
 		fieldType := matches[3]
-		validTypes := utils.HandleLangType("typescript")
-		ok := utils.IsValidType(fieldType, validTypes)
+		ok := utils.IsSupportedLanguage(lang)
+		if !ok {
+			return nil, fmt.Errorf("unsupported language %s", lang)
+		}
+		validTypes := utils.HandleLangType(lang)
+		ok = utils.IsValidType(fieldType, validTypes)
 		if !ok {
 			return nil, fmt.Errorf("unsupported type %s", fieldType)
 		}
 		fields = append(fields, types.Field{
-			Index: i,
+			Index:      i,
 			Name:       fieldName,
 			Type:       fieldType,
 			IsOptional: isOptional,
