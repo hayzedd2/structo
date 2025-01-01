@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/structo/generator"
 	"github.com/structo/parser"
@@ -22,6 +24,8 @@ func handleGenerateMock(c *gin.Context) {
 		return
 	}
 	fields, err := parser.ParseTypeOrInterface(req.TypescriptInterface)
+	fmt.Println(fields,err)
+	fmt.Println(req.TypescriptInterface, req.Count)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

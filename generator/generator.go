@@ -2,12 +2,11 @@ package generator
 
 import (
 	"fmt"
-	"math/rand"
-	"strings"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/structo/types"
+	"math/rand"
+	"strings"
 )
-
 
 var faker = gofakeit.New(0)
 
@@ -181,7 +180,7 @@ func generateMeaningfulString(fieldName string) interface{} {
 	case contains(fieldName, "price"):
 		return fmt.Sprintf("%v", faker.Product().Price)
 	default:
-		return faker.LoremIpsumSentence
+		return faker.LoremIpsumSentence(10)
 	}
 
 }
