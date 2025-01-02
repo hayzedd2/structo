@@ -26,9 +26,7 @@ func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 	if len(typeMatches) < 3 {
 		return nil, fmt.Errorf("invalid format: couldn't parse structure")
 	}
-	fmt.Println("typeMatches", typeMatches[1])
 	fieldSection := typeMatches[2]
-	fmt.Println("fieldsection", fieldSection)
 	var fieldStrings []string
 	if isGoStruct {
 		 // Split by newline and filter empty lines
