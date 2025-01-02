@@ -11,33 +11,75 @@ import (
 func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 	// Clean up input - normalize whitespace while preserving necessary spaces
 	input = strings.TrimSpace(input)
-	input = regexp.MustCompile(`\s+`).ReplaceAllString(input, " ")
-
-	typeOrInterfaceRegex := regexp.MustCompile(`(?:interface|type)\s+(\w+)\s*(?:=)?\s*{([^}]+)}`)
-
-	matches := typeOrInterfaceRegex.FindStringSubmatch(input)
-	if len(matches) < 3 {
-		return nil, fmt.Errorf("invalid type or interface format: couldn't parse structure")
+	input = regexp.MustCompile(`[^\S\n]+`).ReplaceAllString(input, " ")
+	isGoStruct := lang == "golang"
+	var typeMatches []string
+	if isGoStruct {
+		// Go struct regex
+		structRegex := regexp.MustCompile(`type\s+(\w+)\s+struct\s*{([^}]+)}`)
+		typeMatches = structRegex.FindStringSubmatch(input)
+	} else {
+		// TypeScript interface regex
+		interfaceRegex := regexp.MustCompile(`(?:interface|type)\s+(\w+)\s*(?:=)?\s*{([^}]+)}`)
+		typeMatches = interfaceRegex.FindStringSubmatch(input)
 	}
-	fieldSection := matches[2]
+	if len(typeMatches) < 3 {
+		return nil, fmt.Errorf("invalid format: couldn't parse structure")
+	}
+	fieldSection := typeMatches[2]
+	var fieldStrings []string
+	if isGoStruct {
+		 // Split by newline and filter empty lines
+		 lines := strings.Split(fieldSection, "\n")
+		 fmt.Printf("lines is %s and the lenght is %v", lines, len(lines))
+		 for _, line := range lines {
+			 line = strings.TrimSpace(line)
+			 fmt.Println("each line is", line)
+			 if line != "" {
+				 fieldStrings = append(fieldStrings, line)
+			 }
+		 }
+		 fmt.Println(fieldStrings)
+	} else {
+		// Split TypeScript interface fields by semicolon
+		fieldStrings = strings.Split(strings.TrimSpace(fieldSection), ";")
+	}
 
-	// Split fields by semicolon, handling possible trailing semicolon
-	fieldStrings := strings.Split(strings.TrimSpace(fieldSection), ";")
 	var fields []types.Field
-
-	fieldRegex := regexp.MustCompile(`(\w+)(\?)?:\s*((?:\[\])?\w+(?:\[\])?(?:<\w+>)?)`)
+	// Different regex patterns for Go and TypeScript
+	var fieldRegex *regexp.Regexp
+	if isGoStruct {
+		// Go regex to handle all go types
+		fieldRegex = regexp.MustCompile(`^\s*(\w+)\s+(?:\[\])?(\w+(?:\.\w+)?)\s*(?:\x60[^\x60]*\x60)?`)
+	} else {
+		// Typescript regex to handle all go types
+		fieldRegex = regexp.MustCompile(`(\w+)(\?)?:\s*((?:\[\])?\w+(?:\[\])?(?:<\w+>)?)`)
+	}
 	for i, fieldStr := range fieldStrings {
 		fieldStr = strings.TrimSpace(fieldStr)
 		if fieldStr == "" {
 			continue
 		}
 		matches := fieldRegex.FindStringSubmatch(fieldStr)
-		if len(matches) < 4 {
+		if len(matches) < 3 {
 			continue
 		}
-		fieldName := matches[1]
-		isOptional := matches[2] == "?"
-		fieldType := matches[3]
+		var fieldName, fieldType string
+		var isOptional bool
+
+		if isGoStruct {
+			fieldName = matches[1]
+			fieldType = matches[2]
+			// In Go, pointer types are considered optional
+			isOptional = strings.HasPrefix(fieldType, "*")
+			if isOptional {
+				fieldType = strings.TrimPrefix(fieldType, "*")
+			}
+		} else {
+			fieldName = matches[1]
+			isOptional = matches[2] == "?"
+			fieldType = matches[3]
+		}
 		ok := utils.IsSupportedLanguage(lang)
 		if !ok {
 			return nil, fmt.Errorf("unsupported language %s", lang)
@@ -54,7 +96,7 @@ func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 			IsOptional: isOptional,
 		})
 	}
-	fmt.Println(fields)
+	fmt.Println(fields, len(fields))
 	if len(fields) == 0 {
 		return nil, fmt.Errorf("no valid fields found in interface or type")
 	}

@@ -11,6 +11,10 @@ import (
 )
 
 var faker = gofakeit.New(0)
+type Age struct{
+	Age int;
+	Addresss  string;
+}
 
 func GenerateMockObjects(fields []types.Field, count int) []orderedmap.OrderedMap {
 	// Create slice to hold multiple objects
@@ -37,7 +41,7 @@ func GenerateMockObjects(fields []types.Field, count int) []orderedmap.OrderedMa
 func GenerateMockData(field types.Field) interface{} {
     parts := strings.Split(strings.ToLower(field.Name), "_")
     fieldName := strings.Join(parts, "")
-    
+    fmt.Println("fieldtypes", field.Type)
     // Extract base type and check if it's an array
     baseType := field.Type
     isArray := strings.HasSuffix(baseType, "[]") || strings.HasPrefix(baseType, "[]")
