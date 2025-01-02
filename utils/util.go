@@ -29,6 +29,12 @@ func HandleLangType(lang string) []string {
 		"boolean[]",
 		"Date",
 		"any",
+		"{}",
+		"[]",
+		// "Record<string, string>",
+		// "Record<string, number>",
+		// "Record<string, boolean>",
+		// "Record<string, any>",
 	}
 
 	// Valid Go types
@@ -61,6 +67,8 @@ func HandleLangType(lang string) []string {
 		"[]bool",
 		"[]float32",
 		"[]float64",
+		"time.Time",
+		"interface{}",
 	}
 
 	lowerCaseLang := strings.ToLower(lang)

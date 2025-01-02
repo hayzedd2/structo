@@ -26,20 +26,19 @@ func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 	if len(typeMatches) < 3 {
 		return nil, fmt.Errorf("invalid format: couldn't parse structure")
 	}
+	fmt.Println("typeMatches", typeMatches[1])
 	fieldSection := typeMatches[2]
+	fmt.Println("fieldsection", fieldSection)
 	var fieldStrings []string
 	if isGoStruct {
 		 // Split by newline and filter empty lines
 		 lines := strings.Split(fieldSection, "\n")
-		 fmt.Printf("lines is %s and the lenght is %v", lines, len(lines))
 		 for _, line := range lines {
 			 line = strings.TrimSpace(line)
-			 fmt.Println("each line is", line)
 			 if line != "" {
 				 fieldStrings = append(fieldStrings, line)
 			 }
 		 }
-		 fmt.Println(fieldStrings)
 	} else {
 		// Split TypeScript interface fields by semicolon
 		fieldStrings = strings.Split(strings.TrimSpace(fieldSection), ";")
@@ -66,7 +65,6 @@ func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 		}
 		var fieldName, fieldType string
 		var isOptional bool
-
 		if isGoStruct {
 			fieldName = matches[1]
 			fieldType = matches[2]
@@ -75,6 +73,10 @@ func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 			if isOptional {
 				fieldType = strings.TrimPrefix(fieldType, "*")
 			}
+			if strings.Contains(fieldStr, "[]") {
+				fieldType = "[]" + fieldType
+			}
+			fmt.Printf("Field: %s, Name: %s, Type: %s\n", fieldStr, fieldName, fieldType)
 		} else {
 			fieldName = matches[1]
 			isOptional = matches[2] == "?"
@@ -96,7 +98,6 @@ func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 			IsOptional: isOptional,
 		})
 	}
-	fmt.Println(fields, len(fields))
 	if len(fields) == 0 {
 		return nil, fmt.Errorf("no valid fields found in interface or type")
 	}

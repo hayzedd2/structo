@@ -41,15 +41,12 @@ func GenerateMockObjects(fields []types.Field, count int) []orderedmap.OrderedMa
 func GenerateMockData(field types.Field) interface{} {
     parts := strings.Split(strings.ToLower(field.Name), "_")
     fieldName := strings.Join(parts, "")
-    fmt.Println("fieldtypes", field.Type)
     // Extract base type and check if it's an array
     baseType := field.Type
     isArray := strings.HasSuffix(baseType, "[]") || strings.HasPrefix(baseType, "[]")
     if isArray {
         baseType = strings.TrimSuffix(strings.TrimPrefix(baseType, "[]"), "[]")
     }
-	fmt.Println("basetype", baseType)
-
     // Generate single value based on type
     generateValue := func() interface{} {
         switch baseType {
@@ -71,7 +68,7 @@ func GenerateMockData(field types.Field) interface{} {
         case "bool", "boolean", "Boolean":
             return faker.Bool()
             
-        case "Date", "date":
+        case "Date", "date","time.Time":
             return faker.Date()
             
         // TypeScript specific types
@@ -96,7 +93,8 @@ func GenerateMockData(field types.Field) interface{} {
                 return nil
             }
             return faker.Date()
-            
+        case "any","interface{}":
+			return nil
         // Complex TypeScript types
         // case "Record<string, string>":
         //     count := rand.Intn(3) + 1
@@ -209,9 +207,10 @@ func generateMeaningfulString(fieldName string) interface{} {
 		return faker.CreditCardNumber
 	case contains(fieldName, "currency"):
 		return faker.Currency().Short
+	
 
 	// Dates
-	case contains(fieldName, "date", "createdat", "updatedat"):
+	case contains(fieldName, "date", "createdat", "updatedat","dob"):
 		return faker.Date().Format("2006-01-02")
 	case contains(fieldName, "time"):
 		return faker.Date().Format("15:04:05")
