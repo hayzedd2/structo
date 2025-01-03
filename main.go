@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/structo/generator"
 	"github.com/structo/parser"
@@ -12,6 +14,14 @@ import (
 
 func main() {
 	r := gin.Default()
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",
+			"https://structo.vercel.app",
+		},
+		AllowMethods: []string{"POST", "GET"},
+		AllowHeaders: []string{"Origin", "Content-Type"},
+	}))
 	r.POST("/generate-mock", handleGenerateMock)
 	log.Fatal(r.Run(":8080"))
 }
