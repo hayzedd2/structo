@@ -15,12 +15,12 @@ func ParseTypeOrInterface(input, lang string) ([]types.Field, error) {
 	isGoStruct := lang == "golang"
 	var typeMatches []string
 	if isGoStruct {
-		// Go struct regex
-		structRegex := regexp.MustCompile(`type\s+(\w+)\s+struct\s*{([^}]+)}`)
+		// Go struct regex (case-insensitive)
+		structRegex := regexp.MustCompile(`(?i)type\s+(\w+)\s+struct\s*{([^}]+)}`)
 		typeMatches = structRegex.FindStringSubmatch(input)
 	} else {
-		// TypeScript interface regex
-		interfaceRegex := regexp.MustCompile(`(?:interface|type)\s+(\w+)\s*(?:=)?\s*{([^}]+)}`)
+		// TypeScript interface regex (case-insensitive)
+		interfaceRegex := regexp.MustCompile(`(?i)(?:interface|type)\s+(\w+)\s*(?:=)?\s*{([^}]+)}`)
 		typeMatches = interfaceRegex.FindStringSubmatch(input)
 	}
 	if len(typeMatches) < 3 {
